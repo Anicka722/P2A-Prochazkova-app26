@@ -1,0 +1,153 @@
+<script>
+
+let produktyData = [];
+
+// Načtení CSV souboru
+fetch("produkty.csv")
+.then(response => response.text())
+.then(data => {
+
+    const radky = data.trim().split("\n");
+
+    // přeskočíme hlavičku CSV
+    for(let i = 1; i < radky.length; i++) {
+
+        const sloupce = radky[i].split(",");
+
+        // odstranění mezer
+        const nazev = sloupce[0].trim();
+        const cena = parseInt(sloupce[1].trim());
+
+        produktyData.push({
+            nazev: nazev,
+            cena: cena
+        });
+    }
+
+    vykresliProdukty();
+})
+.catch(error => {
+    console.error("Chyba při načítání CSV:", error);
+});
+
+
+// Vykreslení produktů
+function vykresliProdukty() {
+
+    const produktyDiv = document.getElementById("produkty");
+
+    produktyDiv.innerHTML = "";
+
+    produktyData.forEach((produkt, index) => {
+
+        produktyDiv.innerHTML += `
+
+        <div class="produkt">
+
+            <div>
+                <h3>${produkt.nazev}</h3>
+                <p>${produkt.cena} Kč</p>
+            </div>
+
+            <div>
+                <input 
+                    type="number"
+                    min="0"
+                    value="0"
+                    id="produkt-${index}"
+                    onchange="prepocitat()"
+                >
+            </div>
+
+        </div>
+
+        `;
+    });
+}
+
+
+// Přepočet ceny a kusů
+function prepocitat() {
+
+    let celkemCena = 0;
+    let celkemKusu = 0;
+
+    produktyData.forEach((produkt, index) => {
+
+        const input = document.getElementById(`produkt-${index}`);
+
+        const pocet = parseInt(input.value) || 0;
+
+        celkemCena += pocet * produkt.cena;
+        celkemKusu += pocet;
+    });
+
+    document.getElementById("cena").innerText = celkemCena;
+    document.getElementById("kusy").innerText = celkemKusu;
+}
+
+
+// Odeslání objednávky
+function odeslatObjednavku() {
+
+    const jmeno = document.getElementById("jmeno").value;
+    const email = document.getElementById("email").value;
+    const telefon = document.getElementById("telefon").value;
+
+    if(jmeno === "" || email === "" || telefon === "") {
+        alert("Vyplňte všechny údaje!");
+        return;
+    }
+
+    let produktyText = "";
+
+    produktyData.forEach((produkt, index) => {
+
+        const pocet = parseInt(
+            document.getElementById(`produkt-${index}`).value
+        ) || 0;
+
+        if(pocet > 0) {
+
+            produktyText +=
+                `${produkt.nazev} - ${pocet} ks - ${produkt.cena * pocet} Kč\n`;
+        }
+    });
+
+    const cena =
+        document.getElementById("cena").innerText;
+
+    const kusy =
+        document.getElementById("kusy").innerText;
+
+    const zprava = `
+OBJEDNÁVKA - PixelBite Studio
+
+Zákazník:
+${jmeno}
+
+E-mail:
+${email}
+
+Telefon:
+${telefon}
+
+Objednané produkty:
+${produktyText}
+
+Počet kusů:
+${kusy}
+
+Celková cena:
+${cena} Kč
+`;
+
+    const mailtoLink =
+        `mailto:app@kostka-skola.cz` +
+        `?subject=Objednávka PixelBite Studio` +
+        `&body=${encodeURIComponent(zprava)}`;
+
+    window.location.href = mailtoLink;
+}
+
+</script>
