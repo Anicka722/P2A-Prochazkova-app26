@@ -1,82 +1,152 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>PixelBite Studio</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #111;
+    color: white;
+    text-align: center;
+    margin: 0;
+}
+
+header {
+    background: linear-gradient(90deg, #6c5ce7, #00cec9);
+    padding: 20px;
+}
+
+.logo {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+.produkt {
+    background: #222;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+input[type="number"] {
+    width: 60px;
+    padding: 5px;
+}
+
+input[type="text"] {
+    margin: 5px;
+    padding: 8px;
+    width: 80%;
+}
+
+.summary {
+    background: #333;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background: #00b894;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">🎮⚡ PixelBite Studio</div>
+    <p>Studentská firma – gaming produkty & doplňky</p>
+</header>
+
+<div class="container">
+    <h2>Produkty</h2>
+    <div id="produkty"></div>
+
+    <div class="summary">
+        <h3>Objednávka</h3>
+        <p>Počet kusů: <span id="kusy">0</span></p>
+        <p>Celková cena: <span id="cena">0</span> Kč</p>
+
+        <h4>Vaše údaje</h4>
+        <input id="jmeno" type="text" placeholder="Jméno"><br>
+        <input id="prijmeni" type="text" placeholder="Příjmení"><br>
+        <input id="email" type="text" placeholder="E-mail"><br>
+        <input id="telefon" type="text" placeholder="Telefon"><br>
+
+        <button onclick="odeslatObjednavku()">ODESLAT OBJEDNÁVKU</button>
+    </div>
+</div>
+
 <script>
 
 let produktyData = [];
 
-// Načtení CSV souboru
+// ✅ správně načítáme CSV se STŘEDNÍKEM
 fetch("produkty.csv")
 .then(response => response.text())
 .then(data => {
-
     const radky = data.trim().split("\n");
 
-    // přeskočíme hlavičku CSV
     for(let i = 1; i < radky.length; i++) {
+        const sloupce = radky[i].split(";");
 
-        const sloupce = radky[i].split(",");
-
-        // odstranění mezer
         const nazev = sloupce[0].trim();
         const cena = parseInt(sloupce[1].trim());
 
-        produktyData.push({
-            nazev: nazev,
-            cena: cena
-        });
+        produktyData.push({nazev, cena});
     }
 
     vykresliProdukty();
-})
-.catch(error => {
-    console.error("Chyba při načítání CSV:", error);
 });
 
-
-// Vykreslení produktů
 function vykresliProdukty() {
-
     const produktyDiv = document.getElementById("produkty");
 
     produktyDiv.innerHTML = "";
 
     produktyData.forEach((produkt, index) => {
-
         produktyDiv.innerHTML += `
-
         <div class="produkt">
-
             <div>
                 <h3>${produkt.nazev}</h3>
                 <p>${produkt.cena} Kč</p>
             </div>
 
-            <div>
-                <input 
-                    type="number"
-                    min="0"
-                    value="0"
-                    id="produkt-${index}"
-                    onchange="prepocitat()"
-                >
-            </div>
-
+            <input type="number"
+                   min="0"
+                   value="0"
+                   id="produkt-${index}"
+                   onchange="prepocitat()">
         </div>
-
         `;
     });
 }
 
-
-// Přepočet ceny a kusů
 function prepocitat() {
-
     let celkemCena = 0;
     let celkemKusu = 0;
 
     produktyData.forEach((produkt, index) => {
-
-        const input = document.getElementById(`produkt-${index}`);
-
-        const pocet = parseInt(input.value) || 0;
+        const pocet =
+            parseInt(document.getElementById(`produkt-${index}`).value) || 0;
 
         celkemCena += pocet * produkt.cena;
         celkemKusu += pocet;
@@ -86,68 +156,54 @@ function prepocitat() {
     document.getElementById("kusy").innerText = celkemKusu;
 }
 
-
-// Odeslání objednávky
 function odeslatObjednavku() {
 
     const jmeno = document.getElementById("jmeno").value;
+    const prijmeni = document.getElementById("prijmeni").value;
     const email = document.getElementById("email").value;
     const telefon = document.getElementById("telefon").value;
 
-    if(jmeno === "" || email === "" || telefon === "") {
-        alert("Vyplňte všechny údaje!");
+    if(jmeno === "" || prijmeni === "" || email === "" || telefon === "") {
+        alert("Vyplň všechny údaje!");
         return;
     }
 
     let produktyText = "";
 
     produktyData.forEach((produkt, index) => {
-
-        const pocet = parseInt(
-            document.getElementById(`produkt-${index}`).value
-        ) || 0;
+        const pocet =
+            parseInt(document.getElementById(`produkt-${index}`).value) || 0;
 
         if(pocet > 0) {
-
-            produktyText +=
-                `${produkt.nazev} - ${pocet} ks - ${produkt.cena * pocet} Kč\n`;
+            produktyText += `${produkt.nazev} - ${pocet} ks - ${produkt.cena * pocet} Kč\n`;
         }
     });
 
-    const cena =
-        document.getElementById("cena").innerText;
+    const cena = document.getElementById("cena").innerText;
+    const kusy = document.getElementById("kusy").innerText;
 
-    const kusy =
-        document.getElementById("kusy").innerText;
-
-    const zprava = `
-OBJEDNÁVKA - PixelBite Studio
+    const zprava =
+`OBJEDNÁVKA - PixelBite Studio
 
 Zákazník:
-${jmeno}
+${jmeno} ${prijmeni}
+Email: ${email}
+Telefon: ${telefon}
 
-E-mail:
-${email}
-
-Telefon:
-${telefon}
-
-Objednané produkty:
+Produkty:
 ${produktyText}
 
-Počet kusů:
-${kusy}
-
-Celková cena:
-${cena} Kč
-`;
+Počet kusů: ${kusy}
+Celková cena: ${cena} Kč`;
 
     const mailtoLink =
-        `mailto:app@kostka-skola.cz` +
-        `?subject=Objednávka PixelBite Studio` +
-        `&body=${encodeURIComponent(zprava)}`;
+        "mailto:app@kostka-skola.cz" +
+        "?subject=Objednávka PixelBite Studio" +
+        "&body=" + encodeURIComponent(zprava);
 
     window.location.href = mailtoLink;
 }
 
 </script>
+
+</body>
